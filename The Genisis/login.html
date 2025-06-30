@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Mistress Obsidian</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+		
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: 'Georgia', serif;
+      color: #e6e6e6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000;
+      overflow: hidden;
+    }
+
+    /* Full background using Mistress Logo */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url('images/mistress-logo.jpg') center center no-repeat;
+      background-size: cover;
+      z-index: -1;
+      opacity: 0.9;
+      animation: swirl 80s linear infinite;
+      transform-origin: center;
+    }
+
+    @keyframes swirl {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .login-box {
+      width: 90%;
+      max-width: 400px;
+      background: rgba(20, 20, 20, 0.9);
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 18px rgba(255, 0, 0, 0.3);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-box h1 {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+      }
+    }
+
+    h2 {
+      color: #ff1a1a;
+      margin-bottom: 24px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background: #262626;
+      border: 1px solid #333;
+      color: #fff;
+      border-radius: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #990000;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #b30000;
+    }
+
+    .register-btn {
+      background: #990000;
+      color: #fff;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 1em;
+      margin-top: 18px;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+    }
+
+    .register-btn:hover {
+      background: #b30000;
+    }
+
+    .success {
+      color: #39ff14;
+      text-align: center;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+
+    .error {
+      color: #ff1a1a;
+      text-align: center;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      .login-box {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h1>Welcome to Mistress Obsidian Sanctum</h1>
+    <h2>Login</h2>
+    <form id="login-form" autocomplete="off">
+      <input type="text" id="username/email" placeholder="username/email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit">Enter Sanctum</button>
+      <div id="login-status"></div>
+    </form>
+    <h3>Are you curious?</h3>
+    <button class="register-btn" onclick="window.location.href='register.html'">Register Now</button>
+  </div>
+
+  <script>
+  const ADMIN_USER = "admin";
+  const ADMIN_PASS = "goddess";
+
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const user = document.getElementById('username').value.trim().toLowerCase();
+    const pass = document.getElementById('password').value.trim();
+
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      localStorage.setItem('authenticated', 'true');
+      localStorage.setItem('username', user);
+      localStorage.setItem('role', 'admin');
+      window.location.href = "admin.html";
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const found = users.find(u => u.username === user && u.password === pass);
+
+    if (found) {
+      const tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+      if (tributeStatus[user]) {
+        localStorage.setItem('authenticated', 'true');
+        localStorage.setItem('username', user);
+        localStorage.setItem('role', found.role);
+        window.location.href = "dashboard.html";
+      } else {
+        window.location.href = "tribute.html";
+      }
+    } else {
+      showStatus("Invalid username or password.", "error");
+    }
+  });
+
+  function showStatus(msg, type = 'success') {
+    const el = document.getElementById('login-status');
+    el.textContent = msg;
+    el.className = type;
+  }
+</script>
+</body>
+</html>

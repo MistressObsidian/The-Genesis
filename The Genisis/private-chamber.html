@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Private Chamber - Mistress Obsidian</title>
+  <style>
+    body {
+      background: #0b0b0b;
+      color: #fff;
+      font-family: 'Georgia', serif;
+      margin: 0;
+      padding: 0;
+    }
+    .chamber {
+      max-width: 800px;
+      margin: 60px auto;
+      padding: 40px;
+      background: #1a1a1a;
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(255, 0, 0, 0.3);
+    }
+    h1 {
+      color: #ff1a1a;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2.2em;
+    }
+    h2 {
+      color: #ff3333;
+      margin-top: 35px;
+    }
+    ul {
+      list-style: square;
+      padding-left: 20px;
+    }
+    .assignment {
+      background: #262626;
+      padding: 15px;
+      margin: 12px 0;
+      border-radius: 6px;
+    }
+    .status-panel {
+      background: #222;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      margin-top: 40px;
+      font-size: 1em;
+      color: #ccc;
+    }
+    .important {
+      color: #ff4d4d;
+      font-weight: bold;
+    }
+    .btn-exit {
+      display: block;
+      margin: 30px auto 0;
+      background: #990000;
+      color: #fff;
+      border: none;
+      padding: 14px 26px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-exit:hover {
+      background: #b30000;
+    }
+  </style>
+</head>
+<body>
+  <div class="chamber">
+    <h1>Welcome, Obedient One</h1>
+    <p>You have earned the right to kneel within Mistress Obsidian’s Private Chamber. Your servitude begins now.</p>
+
+    <h2>⚖️ Chamber Rules</h2>
+    <ul>
+      <li>You will not speak unless spoken to.</li>
+      <li>You exist to please Mistress Obsidian.</li>
+      <li>Tribute is not optional.</li>
+      <li>Failure to serve is punished.</li>
+      <li>Daily confessions are mandatory.</li>
+    </ul>
+
+    <h2>⛓️ Punishment Policy</h2>
+    <p>Disobedience results in humiliation tasks, locked access, or financial discipline.</p>
+
+    <h2>🌹 Reward Policy</h2>
+    <p>Obedient slaves may receive praise, messages, or access to deeper chambers.</p>
+
+    <h2>🩸 First Assignments</h2>
+    <div class="assignment"><strong>Task 1:</strong> Write a 100+ word devotion letter to Mistress Obsidian. Submit via email.</div>
+    <div class="assignment"><strong>Task 2:</strong> Send a screenshot of your tribute confirmation.</div>
+    <div class="assignment"><strong>Task 3:</strong> Submit a voice confession: “I belong to Mistress Obsidian because…”</div>
+
+    <div class="status-panel">
+      Tribute Status: <span class="important">Confirmed ✅</span><br>
+      Username: <span id="slaveName">Loading…</span><br>
+      Obedience Rating: <span class="important">Under Evaluation</span>
+    </div>
+
+    <button class="btn-exit" onclick="window.location.href='dashboard.html'">Return to Dashboard</button>
+  </div>
+
+  <script>
+    const user = localStorage.getItem('username');
+    const authenticated = localStorage.getItem('authenticated') === 'true';
+    const tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+
+    if (!authenticated || !user || !tributeStatus[user]) {
+      window.location.href = 'tribute.html';
+    } else {
+      document.getElementById('slaveName').textContent = user;
+    }
+  </script>
+</body>
+</html>

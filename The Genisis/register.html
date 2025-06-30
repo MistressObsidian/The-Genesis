@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registration - Mistress Obsidian</title>
+  <style>
+    body { background:#0d0d0d; color:#e6e6e6; font-family:'Georgia', serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0; }
+		.logo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 40px;
+      margin-bottom: 12px;
+    }
+    .logo img {
+      width: 120px;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 0 18px rgba(255,0,0,0.18);
+      background: #111;
+    }
+    .register-box { background:#1a1a1a; padding:40px 28px; border-radius:10px; width:350px; box-shadow:0 0 15px rgba(255,0,0,0.15); margin-top:40px; }
+    h2 { color:#ff1a1a; text-align:center; margin-bottom:30px; }
+    label { display:block; margin-top:16px; color:#ccc; }
+    input, select { width:100%; padding:10px; margin-top:5px; background:#262626; border:1px solid #333; color:#fff; border-radius:4px; }
+    button, .magic-btn { width:100%; padding:12px; border:none; border-radius:4px; cursor:pointer; margin-top:18px; font-weight:bold; transition:background 0.2s; position:relative;}
+    .magic-btn { background:#4285F4; color:#fff;}
+    .magic-btn:hover { background:#3072E0;}
+    button { background:#990000; color:#fff; margin-top:24px;}
+    button:disabled { background: #333; }
+    button:hover:not(:disabled) { background:#b30000; }
+    .login-link { text-align:center; margin-top:22px; }
+    .login-link a { color:#ff1a1a; text-decoration:none; }
+    .success { color:#39ff14; margin-top:12px; text-align:center; font-weight:bold; }
+    .error { color:#ff1a1a; margin-top:12px; text-align:center; font-weight:bold; }
+    .spinner {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      vertical-align: middle;
+      margin-left: 12px;
+    }
+    .spinner:after {
+      content: " ";
+      display: block;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      border-color: #fff #fff #990000 #fff;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+    .or { text-align:center; color:#ccc; margin-top:15px; }
+  </style>
+</head>
+<div class="logo">
+  <img src="images/mistress-logo.JPG" alt="Mistress Obsidian Logo">
+</div>
+<body>
+  <div class="register-box">
+    <h2>Register to Serve and be Worthy</h2>
+
+    <!-- Magic Link Registration -->
+    <button type="button" class="magic-btn" onclick="showMagicLinkPrompt()">Register with Google</button>
+		<button type="button" class="magic-btn" onclick="showMagicLinkPrompt()">Register with Microsoft</button>
+    <div id="magic-status"></div>
+    <div class="or">— or fill the form below —</div>
+
+    <form id="register-form" autocomplete="off">
+      <label>Username/Email</label>
+      <input type="text" id="slaveName" required maxlength="20" name="username/email">
+
+      <label>phone</label>
+      <input type="number" id="slavephone" required name="number">
+
+      <label>Select Your Role</label>
+      <select id="roleSelect" name="role" required>
+        <option value="">-- Choose your role --</option>
+        <option value="slave">Slave</option>
+        <option value="pet">Pet</option>
+        <option value="keyholder">Keyholder</option>
+      </select>
+
+      <label>Password</label>
+      <input type="password" id="slavePassword" required minlength="4" name="password">
+
+      <button type="submit" id="register-btn">Register</button>
+      <span id="spinner" style="display:none;" class="spinner"></span>
+      <div id="register-status"></div>
+    </form>
+
+    <div class="login-link">Already registered? <a href="login.html">Sign In</a></div>
+  </div>
+
+  <script>
+    // Magic Link Registration
+    function showMagicLinkPrompt() {
+      let email = prompt("Enter your email address to receive a magic registration link from Mistress Obsidian:");
+      if (email && /\S+@\S+\.\S+/.test(email)) {
+        document.getElementById('magic-status').textContent = "Sending magic link...";
+        document.getElementById('magic-status').className = "";
+        // Example: Send the magic link with Formspree
+        const fd = new FormData();
+        fd.append('email', email);
+        fd.append('_replyto', email);
+        fd.append('_subject', 'Mistress Obsidian Magic Registration Link');
+        fd.append('message', 'Send this user a registration magic link.');
+        fetch('https://formspree.io/f/xovwwowk', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: fd
+        })
+        .then(r => {
+          document.getElementById('magic-status').textContent = "A magic registration link has been sent to your email (if supported).";
+          document.getElementById('magic-status').className = "success";
+        })
+        .catch(() => {
+          document.getElementById('magic-status').textContent = "Error sending email. Please try again.";
+          document.getElementById('magic-status').className = "error";
+        });
+      } else if (email !== null) {
+        document.getElementById('magic-status').textContent = "Please enter a valid email address.";
+        document.getElementById('magic-status').className = "error";
+      }
+    }
+
+    // Traditional Registration Form
+    document.getElementById('register-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+
+      const name = document.getElementById('slaveName').value.trim().toLowerCase();
+      const email = document.getElementById('slaveEmail').value.trim().toLowerCase();
+      const role = document.getElementById('roleSelect').value;
+      const password = document.getElementById('slavePassword').value;
+      const btn = document.getElementById('register-btn');
+      const spinner = document.getElementById('spinner');
+
+      if (!name || !email || !role || !password) {
+        showStatus('Please fill in all fields.', 'error');
+        return;
+      }
+
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.some(u => u.username === name)) {
+        showStatus('Username already exists. Choose another.', 'error');
+        return;
+      }
+
+      // Pending state
+      btn.disabled = true;
+      btn.textContent = "Pending...";
+      spinner.style.display = "inline-block";
+
+      // Save user locally
+      users.push({ username: name, role, email, password });
+      localStorage.setItem('users', JSON.stringify(users));
+
+      // Optional: submit to Formspree (asynchronously)
+      const ENDPT = 'https://formspree.io/f/xovwwowk';
+      const fd = new FormData();
+      fd.append('username', name);
+      fd.append('email', email);
+      fd.append('role', role);
+      fd.append('password', password);
+      fd.append('_replyto', email);
+      fd.append('_subject', `New Registration: ${name} (${role})`);
+      fetch(ENDPT, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd });
+
+      // Delay and redirect to tribute page
+      setTimeout(() => {
+        btn.textContent = "Register";
+        btn.disabled = false;
+        spinner.style.display = "none";
+        window.location.href = "tribute.html";
+      }, 2000);
+    });
+
+    function showStatus(msg, type='success') {
+      const el = document.getElementById('register-status');
+      el.textContent = msg;
+      el.className = type;
+    }
+  </script>
+</body>
+</html>
