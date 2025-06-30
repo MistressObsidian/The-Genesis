@@ -6,7 +6,7 @@
   <title>Registration - Mistress Obsidian</title>
   <style>
     body { background:#0d0d0d; color:#e6e6e6; font-family:'Georgia', serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0; }
-		.logo {
+    .logo {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -57,25 +57,28 @@
     .or { text-align:center; color:#ccc; margin-top:15px; }
   </style>
 </head>
+<body>
 <div class="logo">
   <img src="images/mistress-logo.JPG" alt="Mistress Obsidian Logo">
 </div>
-<body>
   <div class="register-box">
     <h2>Register to Serve and be Worthy</h2>
 
     <!-- Magic Link Registration -->
     <button type="button" class="magic-btn" onclick="showMagicLinkPrompt()">Register with Google</button>
-		<button type="button" class="magic-btn" onclick="showMagicLinkPrompt()">Register with Microsoft</button>
+    <button type="button" class="magic-btn" onclick="showMagicLinkPrompt()">Register with Microsoft</button>
     <div id="magic-status"></div>
     <div class="or">— or fill the form below —</div>
 
     <form id="register-form" autocomplete="off">
-      <label>Username/Email</label>
-      <input type="text" id="slaveName" required maxlength="20" name="username/email">
+      <label>Username</label>
+      <input type="text" id="slaveName" required maxlength="20" name="username">
 
-      <label>phone</label>
-      <input type="number" id="slavephone" required name="number">
+      <label>Email</label>
+      <input type="email" id="slaveEmail" required name="email">
+
+      <label>Phone</label>
+      <input type="tel" id="slavePhone" required name="phone" pattern="[0-9+ ]+">
 
       <label>Select Your Role</label>
       <select id="roleSelect" name="role" required>
@@ -134,12 +137,13 @@
 
       const name = document.getElementById('slaveName').value.trim().toLowerCase();
       const email = document.getElementById('slaveEmail').value.trim().toLowerCase();
+      const phone = document.getElementById('slavePhone').value.trim();
       const role = document.getElementById('roleSelect').value;
       const password = document.getElementById('slavePassword').value;
       const btn = document.getElementById('register-btn');
       const spinner = document.getElementById('spinner');
 
-      if (!name || !email || !role || !password) {
+      if (!name || !email || !phone || !role || !password) {
         showStatus('Please fill in all fields.', 'error');
         return;
       }
@@ -155,8 +159,8 @@
       btn.textContent = "Pending...";
       spinner.style.display = "inline-block";
 
-      // Save user locally
-      users.push({ username: name, role, email, password });
+      // Save user locally (now includes phone & email)
+      users.push({ username: name, role, email, phone, password });
       localStorage.setItem('users', JSON.stringify(users));
 
       // Optional: submit to Formspree (asynchronously)
@@ -164,6 +168,7 @@
       const fd = new FormData();
       fd.append('username', name);
       fd.append('email', email);
+      fd.append('phone', phone);
       fd.append('role', role);
       fd.append('password', password);
       fd.append('_replyto', email);
