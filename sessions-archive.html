@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Session Archive - Mistress Obsidian</title>
+  <style>
+    body {
+      background: #0b0b0b;
+      color: #e6e6e6;
+      font-family: 'Georgia', serif;
+      margin: 0;
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+      color: #ff1a1a;
+      margin-bottom: 30px;
+    }
+    .archive {
+      max-width: 800px;
+      margin: auto;
+      background: #1a1a1a;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 25px rgba(255, 0, 0, 0.3);
+    }
+    .entry {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #262626;
+      border-left: 5px solid #ff1a1a;
+      border-radius: 6px;
+    }
+    .entry h3 {
+      margin: 0 0 8px;
+      color: #ff4d4d;
+    }
+    .entry p {
+      margin: 4px 0;
+    }
+    a {
+      display: block;
+      text-align: center;
+      margin-top: 25px;
+      color: #ff1a1a;
+      text-decoration: none;
+    }
+    a:hover {
+      color: #b30000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Session Archive</h1>
+  <div class="archive" id="archive-list">Loading...</div>
+  <a href="dashboard.html">← Return to Dashboard</a>
+
+  <script>
+    const user = localStorage.getItem('username');
+    const authenticated = localStorage.getItem('authenticated') === 'true';
+    const tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+    const archiveList = document.getElementById('archive-list');
+
+    if (!authenticated || !user || !tributeStatus[user]) {
+      window.location.href = 'tribute.html';
+    }
+
+    const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+    const filtered = sessions.filter(s => s.name?.toLowerCase() === user);
+
+    if (filtered.length === 0) {
+      archiveList.innerHTML = "<p>No session records found.</p>";
+    } else {
+      archiveList.innerHTML = "";
+      filtered.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `
+          <h3>${s.session || 'Unnamed Session'}</h3>
+          <p><strong>Submitted:</strong> ${s.submitted || 'Unknown date'}</p>
+          <p><strong>Email:</strong> ${s.email}</p>
+          <p><strong>Details:</strong><br>${s.details}</p>
+        `;
+        archiveList.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>

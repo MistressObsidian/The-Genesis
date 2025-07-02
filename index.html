@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mistress Obsidian - Your Dark Desire</title>
+  <!-- Favicon (replace with your favicon file if needed) -->
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <!-- Google Fonts for Playfair Display and Roboto -->
+  <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #0d0b13 url('images/mistress-logo.JPG') no-repeat center top;
+      background-size: 500px auto;
+      font-family: 'Playfair Display', Georgia, serif;
+      color: #e6e6e6;
+      margin: 0;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(40,0,0,0.85) 0%, rgba(20,0,15,0.85) 100%);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .main-content {
+      max-width: 640px;
+      margin: 100px auto 0 auto;
+      background: rgba(20,20,20,0.89);
+      border-radius: 16px;
+      box-shadow: 0 0 35px 8px rgba(255,0,32,0.20), 0 4px 40px 12px #22000b44;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      padding: 44px 34px 38px 34px;
+      animation: fadeIn 1.6s cubic-bezier(.4,0,.2,1);
+      backdrop-filter: blur(1px);
+    }
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(50px);}
+      to { opacity:1; transform: translateY(0);}
+    }
+    .logo {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      filter: drop-shadow(0 0 18px #ff1a1a77);
+    }
+    .logo img {
+      width: 220px;
+      height: auto;
+      border-radius: 22px;
+      border: 3.5px solid #ff1a1a40;
+      background: #141010;
+      box-shadow: 0 0 35px #ff1a1a44;
+      transition: transform 0.3s;
+    }
+    .logo img:hover { transform: scale(1.04) rotate(-2deg);}
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      color: #ff1a1a;
+      font-size: 2.5em;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      margin: 0 0 10px 0;
+      text-shadow: 0 2px 24px #900, 0 0px 2px #fff1;
+      line-height: 1.1;
+    }
+    .subtag {
+      color: #fff;
+      font-weight: 400;
+      letter-spacing: .08em;
+      margin: 0 0 25px 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 1.2em;
+      opacity: 0.88;
+    }
+    /* Hamburger menu button as a link */
+    .menu-link-btn {
+      position: fixed;
+      top: 28px;
+      right: 28px;
+      z-index: 200;
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-decoration: none;
+    }
+    .menu-icon {
+      width: 38px;
+      height: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .menu-icon span {
+      display: block;
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      background: #ff1a1a;
+      box-shadow: 0 2px 7px #ff1a1a55;
+      transition: 0.35s;
+    }
+    .menu-link-btn:focus .menu-icon,
+    .menu-link-btn:hover .menu-icon {
+      outline: none;
+      background: none;
+      filter: drop-shadow(0 0 6px #ff1a1a88);
+    }
+    @media (max-width: 700px) {
+      .slide img { max-height: 48vw;}
+      .logo img { width: 144px;}
+      .main-content { margin-top: 46px;}
+      .menu-link-btn { width: 42px; height: 42px; }
+      .menu-icon { width: 31px; height: 28px;}
+    }
+    .slideshow-container {
+      position: relative;
+      max-width: 100%;
+      margin: 32px auto 24px auto;
+    }
+    .slide {
+      display: none;
+      width: 100%;
+      position: relative;
+    }
+    .slide img {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      display: block;
+      margin: 0 auto;
+      object-fit: contain;
+      max-height: 390px;
+      background: #170c10;
+    }
+    .slide.active { display: block; animation: fadeIn 1s;}
+    .slideshow-nav {
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      transform: translateY(-50%);
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+    .slideshow-btn {
+      background: rgba(30, 0, 0, 0.4);
+      border: none;
+      color: #fff;
+      font-size: 2.2em;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background 0.2s;
+    }
+    .slideshow-btn:hover { background: rgba(153, 0, 0, 0.7);}
+    .slideshow-dots {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .slideshow-dot {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      margin: 0 3px;
+      background: #393939;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: background 0.2s;
+    }
+    .slideshow-dot.active { background: #ff1a1a; }
+    .slideshow-dot:focus { outline: 2px solid #ff1a1a; }
+    section { margin: 22px 0 0 0;}
+    h2 { color: #fff; font-weight: 400; margin-bottom: 13px;}
+    h3 { color: #ff1a1a; margin-top: 18px; margin-bottom: 8px;}
+    p, label, textarea { font-family: 'Roboto', Arial, sans-serif; }
+    form {
+      margin-top: 14px;
+      background: rgba(29,16,21,0.66);
+      padding: 18px 12px 14px 12px;
+      border-radius: 7px;
+      box-shadow: 0 0 13px #9002;
+      text-align: left;
+    }
+    label { display: block; margin-top: 12px;}
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      background: #262626;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    button.submit {
+      margin-top: 18px;
+      background: #990000;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.submit:hover { background: #b30000;}
+    footer {
+      background: #1a1a1a;
+      color: #999;
+      text-align: center;
+      padding: 20px;
+      font-size: 0.92em;
+      margin-top: 38px;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 -2px 16px #9002;
+    }
+  </style>
+  <!-- 
+    NOTE: Check your image filenames and extensions.
+    For Linux/Unix servers, 'JPG' and 'jpg' are NOT the same! 
+    Ensure your files in the 'images' folder match the HTML exactly.
+  -->
+</head>
+<body>
+  <!-- Hamburger Menu Button (3 slashes, as link to menu page) -->
+  <a href="menu.html" class="menu-link-btn" aria-label="Go to menu">
+    <span class="menu-icon">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </a>
+  <div class="main-content">
+    <div class="logo">
+      <img src="images/mistress-logo.JPG" alt="Mistress Obsidian Logo">
+    </div>
+    <header>
+      <h1>OBSIDIAN SANCTUM</h1>
+      <div class="subtag">OBEDIENCE IS PLEASURE</div>
+    </header>
+    <!-- Slideshow gallery under welcome message -->
+    <div class="slideshow-container" id="gallery1">
+      <div class="slide active"><img src="images/IMG_1693.JPG" alt=""></div>
+      <div class="slide"><img src="images/IMG_1688.JPG" alt=""></div>
+      <div class="slide"><img src="images/IMG_1690.JPG" alt=""></div>
+      <div class="slide"><img src="images/IMG_1713.JPG" alt=""></div>
+      <div class="slideshow-nav">
+        <button class="slideshow-btn prev" aria-label="Previous slide">&#10094;</button>
+        <button class="slideshow-btn next" aria-label="Next slide">&#10095;</button>
+      </div>
+      <div class="slideshow-dots"></div>
+    </div>
+    <!-- Welcome and intro -->
+    <section>
+      <h2>WELCOME TO OBSIDIAN SANCTUM</h2>
+      <p>Over the years, I have cultivated the art of domination and still cultivate the simplicity of life. It’s easy for Me to conduct a session and get what I want—regardless of your fears or concerns. I have built an army of adoring men who would do anything just to see My smiling face and become the object of My sadistic whims.</p>
+      <h3>ARE YOU WORTHY?</h3>
+      <p>This path demands commitment, courage, and complete surrender. Your submission is a sacred art. Every session follows a powerful ritual.</p>
+    </section>
+    <!-- Contact / Application form -->
+    <section id="contact">
+      <h2>SUBMIT YOUR REQUEST NOW</h2>
+      <form action="https://formspree.io/f/xovwwowk" method="POST">
+        <label for="name">Slave Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="email">Email Address:</label>
+        <input type="email" id="email" name="email" required>
+        <label for="message">Your Plea:</label>
+        <textarea id="message" name="message" rows="5" placeholder="Explain why you wish to serve Mistress Obsidian..." required></textarea>
+        <!-- 
+          Formspree automatically uses the user's email input for _replyto. 
+          If you want ALL responses sent to your inbox, leave this line.
+          If you want users to receive a copy, you may want to remove or adjust it.
+        -->
+        <input type="hidden" name="_replyto" value="info@mistressobsidian.com">
+        <button type="submit" class="submit">Submit to Mistress</button>
+      </form>
+    </section>
+  </div>
+  <footer>&copy; 2019 Mistress Obsidian. All rights reserved.</footer>
+  <script>
+    // Slideshows with improved accessibility and duplication fix
+    document.querySelectorAll('.slideshow-container').forEach(container => {
+      const slides = container.querySelectorAll('.slide');
+      const prevBtn = container.querySelector('.prev');
+      const nextBtn = container.querySelector('.next');
+      const dotsContainer = container.querySelector('.slideshow-dots');
+      let current = 0;
+      let timer;
+
+      function showSlide(index) {
+        slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+        dotsContainer.querySelectorAll('.slideshow-dot').forEach((dot, i) => dot.classList.toggle('active', i === index));
+        current = index;
+      }
+      function nextSlide() { showSlide((current + 1) % slides.length);}
+      function prevSlide() { showSlide((current - 1 + slides.length) % slides.length);}
+      function resetTimer() {
+        clearInterval(timer);
+        timer = setInterval(nextSlide, 4000);
+      }
+
+      // Clear any existing dots before creating new ones
+      dotsContainer.innerHTML = "";
+      slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'slideshow-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+        dot.setAttribute('type', 'button');
+        dot.onclick = () => { showSlide(i); resetTimer(); };
+        dotsContainer.appendChild(dot);
+      });
+      prevBtn.onclick = () => { prevSlide(); resetTimer(); };
+      nextBtn.onclick = () => { nextSlide(); resetTimer(); };
+      resetTimer();
+    });
+  </script>
+</body>
+</html>
