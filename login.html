@@ -54,7 +54,7 @@
     <h1>Welcome to Mistress Obsidian Sanctum</h1>
     <h2>Login</h2>
     <form id="login-form" autocomplete="off">
-      <input type="text" id="username" placeholder="username" required>
+      <input type="text" id="username" placeholder="username or email" required>
       <input type="password" id="password" placeholder="Password" required>
       <button type="submit">Enter Sanctum</button>
       <div id="login-status"></div>
@@ -66,8 +66,9 @@
   <script>
     const ADMIN_USER = "admin";
     const ADMIN_PASS = "goddess";
+    const SHEETDB_API = "https://sheetdb.io/api/v1/a51mmkqkea3wh";
 
-    document.getElementById('login-form').addEventListener('submit', function(e) {
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const username = document.getElementById('username').value.trim().toLowerCase();
       const password = document.getElementById('password').value.trim();
@@ -84,32 +85,45 @@
         return;
       }
 
-      // Regular user login
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find(u => u.username === username && u.password === password);
+      // Show loading while checking
+      statusEl.textContent = "Checking credentials...";
+      statusEl.className = "loading";
 
-      if (user) {
-        const tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
-        if (tributeStatus[username]) {
-          // Tribute verified: show loading, then go to dashboard
-          statusEl.textContent = "Loading Dashboard...";
-          statusEl.className = "loading";
-          localStorage.setItem('authenticated', 'true');
-          localStorage.setItem('username', username);
-          localStorage.setItem('role', user.role);
-          setTimeout(function() {
-            window.location.href = "dashboard.html";
-          }, 1500);
-        } else {
-          // Not tribute verified: show error, then redirect
-          statusEl.textContent = "Your tribute has not been verified by Mistress. Access denied.";
+      // Fetch users from SheetDB
+      try {
+        const res = await fetch(SHEETDB_API);
+        const users = await res.json();
+
+        // Find user by username OR email, and password
+        const user = users.find(u =>
+          (u.username && u.username.toLowerCase() === username || u.email && u.email.toLowerCase() === username)
+          && u.password === password
+        );
+
+        if (!user) {
+          statusEl.textContent = "Invalid username/email or password.";
           statusEl.className = "error";
-          setTimeout(function() {
-            window.location.href = "tribute.html";
-          }, 1500);
+          return;
         }
-      } else {
-        statusEl.textContent = "Invalid username or password.";
+
+        // Check tribute approval
+        if (user.tributeApproved !== "true") {
+          statusEl.textContent = "Your tribute has not been approved by Mistress. Access denied.";
+          statusEl.className = "error";
+          setTimeout(() => window.location.href = "tribute.html", 2200);
+          return;
+        }
+
+        // Success: Set session and redirect to dashboard
+        statusEl.textContent = "Loading Dashboard...";
+        statusEl.className = "loading";
+        localStorage.setItem('authenticated', 'true');
+        localStorage.setItem('username', user.username);
+        localStorage.setItem('role', user.role);
+        setTimeout(() => window.location.href = "dashboard.html", 1200);
+
+      } catch (err) {
+        statusEl.textContent = "Could not connect. Try again later.";
         statusEl.className = "error";
       }
     });
