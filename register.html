@@ -131,12 +131,12 @@
       }
     }
 
-    // Traditional Registration Form
+    // Google Sheets (SheetDB API) Registration
     document.getElementById('register-form').addEventListener('submit', async function(e){
       e.preventDefault();
 
-      const name = document.getElementById('slaveName').value.trim().toLowerCase();
-      const email = document.getElementById('slaveEmail').value.trim().toLowerCase();
+      const name = document.getElementById('slaveName').value.trim();
+      const email = document.getElementById('slaveEmail').value.trim();
       const phone = document.getElementById('slavePhone').value.trim();
       const role = document.getElementById('roleSelect').value;
       const password = document.getElementById('slavePassword').value;
@@ -148,40 +148,39 @@
         return;
       }
 
-      let users = JSON.parse(localStorage.getItem('users') || '[]');
-      if (users.some(u => u.username === name)) {
-        showStatus('Username already exists. Choose another.', 'error');
-        return;
-      }
-
-      // Pending state
       btn.disabled = true;
       btn.textContent = "Pending...";
       spinner.style.display = "inline-block";
 
-      // Save user locally (now includes phone & email)
-      users.push({ username: name, role, email, phone, password });
-      localStorage.setItem('users', JSON.stringify(users));
+      // Submit to Google Sheets via SheetDB API
+      const SHEETDB_API = "https://sheetdb.io/api/v1/a51mmkqkea3wh";
+      const data = {
+        username: name,
+        email: email,
+        phone: phone,
+        role: role,
+        password: password
+      };
 
-      // Optional: submit to Formspree (asynchronously)
-      const ENDPT = 'https://formspree.io/f/xovwwowk';
-      const fd = new FormData();
-      fd.append('username', name);
-      fd.append('email', email);
-      fd.append('phone', phone);
-      fd.append('role', role);
-      fd.append('password', password);
-      fd.append('_replyto', email);
-      fd.append('_subject', `New Registration: ${name} (${role})`);
-      fetch(ENDPT, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd });
-
-      // Delay and redirect to tribute page
-      setTimeout(() => {
+      try {
+        await fetch(SHEETDB_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data })
+        });
+        showStatus("Registration successful. Redirecting...", "success");
+        setTimeout(() => {
+          btn.textContent = "Register";
+          btn.disabled = false;
+          spinner.style.display = "none";
+          window.location.href = "tribute.html";
+        }, 1500);
+      } catch (err) {
+        showStatus("Registration failed. Try again.", "error");
         btn.textContent = "Register";
         btn.disabled = false;
         spinner.style.display = "none";
-        window.location.href = "tribute.html";
-      }, 2000);
+      }
     });
 
     function showStatus(msg, type='success') {
