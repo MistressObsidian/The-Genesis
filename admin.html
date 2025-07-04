@@ -13,7 +13,7 @@
     tr:nth-child(even) { background: #171717; }
     tr:nth-child(odd) { background: #1e1e1e; }
     .status { font-weight: bold; }
-    .approved { color: #39ff14; }
+    .accepted { color: #39ff14; }
     .pending { color: #ffd700; }
     .declined { color: #ff1a1a; }
     button { padding: 8px 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin: 0 2px; }
@@ -40,6 +40,20 @@
     .modal-content button { margin: 0 6px 0 0; }
     .add-btn { margin-top: 15px; margin-bottom: 8px; background: #990000; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight:bold;}
     .add-btn:hover { background: #ff1a1a; }
+    /* Spinner */
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px; vertical-align: middle;
+    }
+    .spinner-inner {
+      display: block;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      border-color: #fff #fff #990000 #fff;
+      animation: spin 0.8s linear infinite;
+    }
     @media (max-width: 1100px) {
       .admin-box { padding: 10px 2vw; }
       table { font-size: 0.97em; }
@@ -60,9 +74,9 @@
       <thead>
         <tr>
           <th>Slave Name</th>
-          <th>Email</th>
           <th>Role</th>
-          <th>Approval Status</th>
+          <th>Tribute Paid</th>
+          <th>Tribute Approval</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -123,54 +137,57 @@
   </div>
 
   <script>
-    const SHEETDB_API = "https://sheetdb.io/api/v1/a51mmkqkea3wh";
-
     // Only admins can access this panel
     if (localStorage.getItem('role') !== 'admin') {
       window.location.href = 'login.html';
     }
 
-    async function loadUsers() {
+    // Helper: Display tribute paid status
+    function displayPaidStatus(paid) {
+      if (paid === true) return '<span class="status accepted">Yes</span>';
+      return '<span class="status declined">No</span>';
+    }
+
+    // Helper: Display tribute approval status
+    function displayApprovalStatus(status) {
+      if (status === true) return '<span class="status accepted">Accepted</span>';
+      if (status === false) return '<span class="status declined">Declined</span>';
+      return '<span class="status pending">Pending</span>';
+    }
+
+    // Load users and tribute statuses to table
+    function loadUsers() {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+      const confirmedTribute = JSON.parse(localStorage.getItem('confirmedTribute') || '{}');
       const search = document.getElementById('user-search').value.trim().toLowerCase();
       let html = '';
-      let users = [];
-      try {
-        const res = await fetch(SHEETDB_API);
-        users = await res.json();
-      } catch (e) {
-        html = "<tr><td colspan='5'>Could not load users.</td></tr>";
-      }
 
       users.forEach((user, idx) => {
         if (
           search &&
-          !(user.username?.toLowerCase().includes(search) || user.email?.toLowerCase().includes(search))
+          !user.username.toLowerCase().includes(search) &&
+          !user.email.toLowerCase().includes(search)
         ) return;
 
-        let statusTxt = '<span class="status pending">Pending</span>';
-        let btns = `
-          <button class="accept" onclick="approveUser('${user.username}', '${user.email}')">Approve</button>
-          <button class="decline" onclick="declineUser('${user.username}', '${user.email}')">Decline</button>
-        `;
-        if (user.tributeApproved === 'true') {
-          statusTxt = '<span class="status approved">Approved</span>';
-          btns = `<button class="undo" onclick="undoUser('${user.username}', '${user.email}')">Undo</button>`;
-        }
-        if (user.tributeApproved === 'false') {
-          statusTxt = '<span class="status declined">Declined</span>';
-          btns = `<button class="undo" onclick="undoUser('${user.username}', '${user.email}')">Undo</button>`;
+        const paid = tributeStatus[user.username] === true;
+        let approval = null;
+        if (paid) {
+          approval = confirmedTribute.hasOwnProperty(user.username) ? confirmedTribute[user.username] : null;
         }
 
         html += `
           <tr>
-            <td>${user.username || ""}</td>
-            <td>${user.email || ""}</td>
-            <td>${user.role || ""}</td>
-            <td>${statusTxt}</td>
+            <td>${user.username}</td>
+            <td>${user.role}</td>
+            <td>${displayPaidStatus(paid)}</td>
+            <td>${displayApprovalStatus(approval)}</td>
             <td>
-              ${btns}
+              <button class="accept" onclick="handleTributeAction('accept', '${user.username}')">Accept</button>
+              <button class="decline" onclick="handleTributeAction('decline', '${user.username}')">Decline</button>
+              <button class="undo" onclick="handleTributeAction('undo', '${user.username}')">Undo</button>
               <button class="edit" onclick="editUser(${idx})">Edit</button>
-              <button class="delete" onclick="deleteUser('${user.username}')">Delete</button>
+              <button class="delete" onclick="deleteUser(${idx})">Delete</button>
               <button class="notify" onclick="notifyUser('${user.email}', '${user.username}')">Notify</button>
             </td>
           </tr>
@@ -178,86 +195,134 @@
       });
 
       document.getElementById('user-tbody').innerHTML = html;
-      window.adminUsers = users;
     }
 
-    // Approve user (set tributeApproved to "true")
-    async function approveUser(username, email) {
-      if (!confirm(`Approve this user?`)) return;
-      await fetch(`${SHEETDB_API}/username/${encodeURIComponent(username)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: { tributeApproved: "true" } })
+    // Tribute action handler with loading/approved delay
+    function handleTributeAction(action, username) {
+      let msg = '';
+      if (action === 'accept') msg = `Accept tribute from ${username}?`;
+      else if (action === 'decline') msg = `Decline tribute from ${username}?`;
+      else if (action === 'undo') msg = `Undo tribute decision for ${username}?`;
+
+      if (!confirm(msg)) return;
+
+      // Find the table row for feedback UI
+      const rows = document.querySelectorAll('#user-tbody tr');
+      let row = null;
+      rows.forEach(r => {
+        if (r.cells[0].textContent === username) row = r;
       });
-      sendCustomEmail(email, username, "approved");
+
+      // Show loading state in the Approval column
+      if (row) {
+        const statusCell = row.cells[3];
+        statusCell.innerHTML = `<span style="color:#ffd700;font-weight:bold;">Loading...</span>
+          <span class="spinner"><span class="spinner-inner"></span></span>`;
+      }
+
+      setTimeout(() => {
+        if (row) {
+          const statusCell = row.cells[3];
+          if (action === 'accept') {
+            statusCell.innerHTML = `<span style="color:#39ff14;font-weight:bold;">Approved</span>`;
+            setTimeout(() => confirmTribute(username, true), 800);
+          } else if (action === 'decline') {
+            statusCell.innerHTML = `<span style="color:#ff1a1a;font-weight:bold;">Declined</span>`;
+            setTimeout(() => confirmTribute(username, false), 800);
+          } else if (action === 'undo') {
+            statusCell.innerHTML = `<span style="color:#ffd700;font-weight:bold;">Pending</span>`;
+            setTimeout(() => undoTribute(username), 800);
+          }
+        }
+      }, 2000); // 2 second loading effect
+    }
+
+    // Confirm tribute acceptance or decline
+    function confirmTribute(username, accepted) {
+      let confirmedTribute = JSON.parse(localStorage.getItem('confirmedTribute') || '{}');
+      confirmedTribute[username] = accepted;
+      localStorage.setItem('confirmedTribute', JSON.stringify(confirmedTribute));
       loadUsers();
+      sendStatusEmail(username, accepted);
     }
 
-    // Decline user (set tributeApproved to "false")
-    async function declineUser(username, email) {
-      if (!confirm(`Decline this user?`)) return;
-      await fetch(`${SHEETDB_API}/username/${encodeURIComponent(username)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: { tributeApproved: "false" } })
-      });
-      sendCustomEmail(email, username, "declined");
-      loadUsers();
+    // Undo tribute decision
+    function undoTribute(username) {
+      let confirmedTribute = JSON.parse(localStorage.getItem('confirmedTribute') || '{}');
+      if (confirmedTribute.hasOwnProperty(username)) {
+        delete confirmedTribute[username];
+        localStorage.setItem('confirmedTribute', JSON.stringify(confirmedTribute));
+        loadUsers();
+      }
     }
 
-    // Undo user (set tributeApproved to "pending")
-    async function undoUser(username, email) {
-      if (!confirm(`Undo approval/decline for this user?`)) return;
-      await fetch(`${SHEETDB_API}/username/${encodeURIComponent(username)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: { tributeApproved: "pending" } })
-      });
-      sendCustomEmail(email, username, "pending");
+    // Delete user and related data
+    function deleteUser(idx) {
+      if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      const uname = users[idx].username;
+      users.splice(idx, 1);
+      localStorage.setItem('users', JSON.stringify(users));
+
+      let tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+      let confirmedTribute = JSON.parse(localStorage.getItem('confirmedTribute') || '{}');
+      delete tributeStatus[uname];
+      delete confirmedTribute[uname];
+      localStorage.setItem('tributeStatus', JSON.stringify(tributeStatus));
+      localStorage.setItem('confirmedTribute', JSON.stringify(confirmedTribute));
+
       loadUsers();
     }
 
     // Edit user modal open
     function editUser(idx) {
-      const user = window.adminUsers[idx];
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users[idx];
       document.getElementById('editIndex').value = idx;
-      document.getElementById('editName').value = user.username || "";
-      document.getElementById('editEmail').value = user.email || "";
-      document.getElementById('editRole').value = user.role || "slave";
+      document.getElementById('editName').value = user.username;
+      document.getElementById('editEmail').value = user.email;
+      document.getElementById('editRole').value = user.role;
       document.getElementById('editPass').value = "";
       document.getElementById('editModal').style.display = 'flex';
     }
 
+    // Close edit modal
     function closeEdit() {
       document.getElementById('editModal').style.display = 'none';
     }
 
-    document.getElementById('editForm').addEventListener('submit', async function(e) {
+    // Save edit form
+    document.getElementById('editForm').addEventListener('submit', function(e) {
       e.preventDefault();
       if (!confirm("Save changes to this user?")) return;
+
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
       const idx = document.getElementById('editIndex').value;
-      const user = window.adminUsers[idx];
       const newName = document.getElementById('editName').value.trim();
       const newEmail = document.getElementById('editEmail').value.trim();
       const newRole = document.getElementById('editRole').value;
       const newPass = document.getElementById('editPass').value;
 
-      const patchData = {
-        username: newName,
-        email: newEmail,
-        role: newRole
-      };
-      if (newPass) patchData.password = newPass;
-      await fetch(`${SHEETDB_API}/username/${encodeURIComponent(user.username)}`, {
-        method: 'PATCH',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: patchData })
-      });
+      if (!newName || !newEmail || !newRole) return;
 
+      // Check for username conflict (except for same user)
+      if (users.some((u, i) => u.username === newName && i != idx)) {
+        alert("Username already exists.");
+        return;
+      }
+
+      users[idx].username = newName;
+      users[idx].email = newEmail;
+      users[idx].role = newRole;
+      if (newPass) users[idx].password = newPass;
+
+      localStorage.setItem('users', JSON.stringify(users));
       closeEdit();
       loadUsers();
     });
 
+    // Open add user modal
     function openAdd() {
       document.getElementById('addName').value = '';
       document.getElementById('addEmail').value = '';
@@ -266,66 +331,56 @@
       document.getElementById('addModal').style.display = 'flex';
     }
 
+    // Close add modal
     function closeAdd() {
       document.getElementById('addModal').style.display = 'none';
     }
 
-    document.getElementById('addForm').addEventListener('submit', async function(e) {
+    // Add user form submission
+    document.getElementById('addForm').addEventListener('submit', function(e) {
       e.preventDefault();
       if (!confirm("Confirm and create this user?")) return;
 
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
       const newName = document.getElementById('addName').value.trim();
       const newEmail = document.getElementById('addEmail').value.trim();
       const newRole = document.getElementById('addRole').value;
       const newPass = document.getElementById('addPass').value;
 
-      await fetch(SHEETDB_API, {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: {
-          username: newName,
-          email: newEmail,
-          role: newRole,
-          password: newPass,
-          tributeApproved: "pending"
-        }})
-      });
+      if (!newName || !newEmail || !newRole || !newPass) return;
 
+      if (users.some(u => u.username === newName)) {
+        alert("Username already exists.");
+        return;
+      }
+
+      users.push({ username: newName, email: newEmail, role: newRole, password: newPass });
+      localStorage.setItem('users', JSON.stringify(users));
       closeAdd();
       loadUsers();
     });
 
-    // Delete user (DELETE by username)
-    async function deleteUser(username) {
-      if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
-      await fetch(`${SHEETDB_API}/username/${encodeURIComponent(username)}`, {
-        method: "DELETE"
-      });
-      loadUsers();
-    }
-
-    // Custom email notification for each status
-    function sendCustomEmail(email, username, status) {
-      let subject = "Mistress Obsidian Notification";
-      let body = "";
-      if (status === "approved") {
-        subject = "Your Tribute Has Been Approved";
-        body = `Dear ${username},%0D%0A%0D%0ACongratulations. Your tribute has been APPROVED by Mistress Obsidian. You now have access to the Private Chamber.%0D%0A%0D%0A- Mistress Obsidian`;
-      } else if (status === "declined") {
-        subject = "Your Tribute Has Been Declined";
-        body = `Dear ${username},%0D%0A%0D%0AWe regret to inform you that your tribute was DECLINED by Mistress Obsidian. Please contact Mistress if you believe this is an error or wish to try again.%0D%0A%0D%0A- Mistress Obsidian`;
-      } else {
-        subject = "Your Tribute Status Reset";
-        body = `Dear ${username},%0D%0A%0D%0AThe status of your tribute has been reset to PENDING by Mistress Obsidian. Please await further instructions.%0D%0A%0D%0A- Mistress Obsidian`;
-      }
-      window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`);
-    }
-
+    // Notify user by email (mailto)
     function notifyUser(email, username) {
       const body = encodeURIComponent(`Dear ${username},\n\n[Your message here]\n\n- Mistress Obsidian`);
       window.open(`mailto:${email}?subject=Mistress Obsidian Notification&body=${body}`);
     }
 
+    // Send tribute status email
+    function sendStatusEmail(username, accepted) {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.username === username);
+      if (!user) return;
+
+      let msg = accepted
+        ? "Your tribute has been accepted by Mistress Obsidian. You may now access the Private Chamber."
+        : "Your tribute has been declined by Mistress Obsidian. Please contact Mistress for more information.";
+
+      const body = encodeURIComponent(`Dear ${username},\n\n${msg}\n\n- Mistress Obsidian`);
+      window.open(`mailto:${user.email}?subject=Tribute Status Update&body=${body}`);
+    }
+
+    // Logout
     function logout() {
       localStorage.removeItem('authenticated');
       localStorage.removeItem('username');
@@ -333,6 +388,7 @@
       window.location.href = 'login.html';
     }
 
+    // Load users on page load
     loadUsers();
   </script>
 </body>
