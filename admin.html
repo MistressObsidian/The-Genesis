@@ -4,66 +4,7 @@
   <meta charset="UTF-8" />
   <title>Admin Panel - Mistress Obsidian Tribute Control</title>
   <style>
-    body { background: #0d0d0d; color: #e6e6e6; font-family: 'Georgia', serif; margin:0; }
-    .admin-box { background: #181818; max-width: 1100px; margin: 48px auto; border-radius: 10px; box-shadow: 0 0 18px #99000055; padding: 40px 24px; }
-    h2 { color: #ff1a1a; text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 34px; }
-    th, td { padding: 13px 10px; border-bottom: 1px solid #333; text-align: center; }
-    th { background: #990000; color: #fff; }
-    tr:nth-child(even) { background: #171717; }
-    tr:nth-child(odd) { background: #1e1e1e; }
-    .status { font-weight: bold; }
-    .accepted { color: #39ff14; }
-    .pending { color: #ffd700; }
-    .declined { color: #ff1a1a; }
-    button, .icon-btn { padding: 8px 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin: 0 2px; }
-    .accept { background: #228b22; color: #fff; }
-    .accept:hover { background: #39ff14; color: #181818; }
-    .decline { background: #900; color: #fff; }
-    .decline:hover { background: #ff3333; color: #181818; }
-    .undo { background: #444; color: #fff; }
-    .undo:hover { background: #ffbb00; color: #181818; }
-    .edit { background: #0077cc; color: #fff; }
-    .edit:hover { background: #33bbff; color: #181818; }
-    .delete { background: #990000; color: #fff; }
-    .delete:hover { background: #ff1a1a; color: #fff; }
-    .notify { background: #9e6b16; color: #fff; }
-    .notify:hover { background: #ffd700; color: #181818; }
-    .notes-btn { background: #c87e18; color: #fff;}
-    .notes-btn:hover { background: #fff; color: #c87e18;}
-    .logout { margin-top: 25px; background: #333; color: #fff; }
-    .logout:hover { background: #990000; }
-    .search-bar { width: 99%; margin: 18px 0 5px 0; padding: 8px 12px; border-radius: 6px; border: 1px solid #333; background: #232323; color: #fff; font-size: 1.05em;}
-    #editModal, #addModal, #viewModal, #notesModal { display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background:rgba(0,0,0,0.82); align-items: center; justify-content: center; z-index: 1000;}
-    .modal-content { background: #212121; padding: 32px 25px; border-radius: 10px; max-width: 420px; margin:auto; color: #fff; }
-    .modal-content label { display: block; margin-top: 15px; }
-    .modal-content input, .modal-content select, .modal-content textarea { width: 100%; padding: 8px 10px; border-radius: 4px; background: #333; border: none; color: #fff; margin-top: 4px;}
-    .modal-content .modal-actions { margin-top: 22px; text-align: center; }
-    .modal-content button { margin: 0 6px 0 0; }
-    .add-btn { margin-top: 15px; margin-bottom: 8px; background: #990000; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight:bold;}
-    .add-btn:hover { background: #ff1a1a; }
-    button[disabled], .disabled {
-      background: #222 !important;
-      color: #999 !important;
-      cursor: not-allowed !important;
-      opacity: 0.7;
-    }
-    .history-log { background:#171717; color:#ffe; border-radius:5px; font-size:0.97em; padding:9px 12px; margin-top:10px; }
-    .history-log span { display:block; border-bottom:1px solid #333; margin-bottom:2px;}
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    .spinner { display: inline-block; width: 18px; height: 18px; vertical-align: middle;}
-    .spinner-inner { display: block; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #fff; border-color: #fff #fff #990000 #fff; animation: spin 0.8s linear infinite; }
-    @media (max-width: 1100px) {
-      .admin-box { padding: 10px 2vw; }
-      table { font-size: 0.97em; }
-      th, td { padding: 7px 4px; }
-      .modal-content {max-width:98vw;}
-    }
-    @media (max-width: 600px) {
-      .admin-box { padding: 5px 0; }
-      table { font-size: 0.87em; }
-      .modal-content {max-width:99vw;}
-    }
+    /* ... (keep your CSS unchanged) ... */
   </style>
 </head>
 <body>
@@ -82,157 +23,67 @@
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody id="user-tbody"></tbody>
+      <tbody id="user-tbody">
+        <!-- Users will load here -->
+      </tbody>
     </table>
     <button class="logout" onclick="logout()">Log out</button>
   </div>
 
-  <!-- View Application Modal -->
-  <div id="viewModal">
-    <div class="modal-content">
-      <h3>User Application</h3>
-      <div id="viewDetails"></div>
-      <div class="modal-actions">
-        <button onclick="closeModal('viewModal')" class="accept">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Admin Notes Modal -->
-  <div id="notesModal">
-    <div class="modal-content">
-      <h3>Admin Notes</h3>
-      <textarea id="adminNotes" rows="6"></textarea>
-      <div class="modal-actions">
-        <button onclick="saveNotes()" class="accept">Save</button>
-        <button onclick="closeModal('notesModal')" class="decline">Cancel</button>
-      </div>
-      <div id="notesHistory" class="history-log"></div>
-    </div>
-  </div>
-
-  <!-- Edit User Modal -->
-  <div id="editModal">
-    <div class="modal-content">
-      <h3>Edit User</h3>
-      <form id="editForm">
-        <input type="hidden" id="editIndex">
-        <label>Slave Name <input type="text" id="editName" required maxlength="20"></label>
-        <label>Email <input type="email" id="editEmail" required></label>
-        <label>Role
-          <select id="editRole" required>
-            <option value="slave">Slave</option>
-            <option value="pet">Pet</option>
-            <option value="keyholder">Keyholder</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label>
-        <label>Reset Password <input type="text" id="editPass" placeholder="(leave blank to keep)"></label>
-        <div class="modal-actions">
-          <button type="submit" class="accept">Save</button>
-          <button type="button" onclick="closeEdit()" class="decline">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Add User Modal -->
-  <div id="addModal">
-    <div class="modal-content">
-      <h3>Add New User</h3>
-      <form id="addForm">
-        <label>Slave Name <input type="text" id="addName" required maxlength="20"></label>
-        <label>Email <input type="email" id="addEmail" required></label>
-        <label>Role
-          <select id="addRole" required>
-            <option value="slave">Slave</option>
-            <option value="pet">Pet</option>
-            <option value="keyholder">Keyholder</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label>
-        <label>Password <input type="text" id="addPass" required minlength="4"></label>
-        <label>Tribute Paid
-          <select id="addPaid" required>
-            <option value="false">No</option>
-            <option value="true">Yes</option>
-          </select>
-        </label>
-        <label>Tribute Approval
-          <select id="addApproval" required>
-            <option value="">Pending</option>
-            <option value="true">Accepted</option>
-            <option value="false">Declined</option>
-          </select>
-        </label>
-        <div class="modal-actions">
-          <button type="submit" class="accept">Add User</button>
-          <button type="button" onclick="closeAdd()" class="decline">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <!-- Edit/Add User Modals (keep unchanged) ... -->
 
   <script>
-    // ==== SheetDB endpoint ====
-    const SHEETDB_API = 'https://sheetdb.io/api/v1/a51mmkqkea3wh';
-
+    // Only admins can access this panel
     if (localStorage.getItem('role') !== 'admin') {
       window.location.href = 'login.html';
     }
 
-    let notesUserId = null;
-    let notesHistory = [];
-
+    // Helper: Display tribute paid status
+    function displayPaidStatus(paid) {
+      if (paid === true) return '<span class="status accepted">Yes</span>';
+      return '<span class="status declined">No</span>';
+    }
     function displayApprovalStatus(status) {
-      if (status === "true" || status === true) return '<span class="status accepted">Accepted</span>';
-      if (status === "false" || status === false) return '<span class="status declined">Declined</span>';
+      if (status === true) return '<span class="status accepted">Accepted</span>';
+      if (status === false) return '<span class="status declined">Declined</span>';
       return '<span class="status pending">Pending</span>';
     }
 
-    async function loadUsers() {
+    // Load users and tribute statuses to table
+    function loadUsers() {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+      const confirmedTribute = JSON.parse(localStorage.getItem('confirmedTribute') || '{}');
       const search = document.getElementById('user-search').value.trim().toLowerCase();
-      let res = await fetch(SHEETDB_API);
-      let users = await res.json();
       let html = '';
-      window._latestUsers = users;
 
       users.forEach((user, idx) => {
         if (
           search &&
-          !user.username?.toLowerCase().includes(search) &&
-          !user.email?.toLowerCase().includes(search)
+          !user.username.toLowerCase().includes(search) &&
+          !user.email.toLowerCase().includes(search)
         ) return;
-        const tributePaidYes = user.tributePaid == "true";
+
+        const paid = tributeStatus[user.username] === true;
+        let approval = null;
+        if (paid) {
+          approval = confirmedTribute.hasOwnProperty(user.username) ? confirmedTribute[user.username] : null;
+        }
+
         html += `
           <tr>
-            <td>${user.username || ''}</td>
-            <td>${user.email || ''}</td>
-            <td>${user.role || ''}</td>
+            <td>${user.username}</td>
+            <td>${user.email}</td>
+            <td>${user.role}</td>
+            <td>${displayPaidStatus(paid)}</td>
+            <td>${displayApprovalStatus(approval)}</td>
             <td>
-              <select onchange="setTributePaid('${user.id || user.row || idx}', this.value)">
-                <option value="false" ${user.tributePaid == "false" || !user.tributePaid ? "selected" : ""}>No</option>
-                <option value="true" ${user.tributePaid == "true" ? "selected" : ""}>Yes</option>
-              </select>
-            </td>
-            <td>${displayApprovalStatus(user.tributeApproved)}</td>
-            <td>
-              <button class="icon-btn" onclick="viewApplication(${idx})" title="View Application">View</button>
-              <button class="accept" onclick="handleTributeAction('accept', '${user.id || user.row || idx}', this, ${idx})" 
-                ${!tributePaidYes ? "disabled title='Cannot approve: tribute not paid.'" : ""}>
-                Approve
-              </button>
-              <button class="decline" onclick="handleTributeAction('decline', '${user.id || user.row || idx}', this, ${idx})" 
-                ${!tributePaidYes ? "disabled title='Cannot decline: tribute not paid.'" : ""}>
-                Decline
-              </button>
-              <button class="undo" onclick="handleTributeAction('undo', '${user.id || user.row || idx}', this, ${idx})">
-                Undo
-              </button>
+              <button class="accept" onclick="handleTributeAction('accept', '${user.username}')">Accept</button>
+              <button class="decline" onclick="handleTributeAction('decline', '${user.username}')">Decline</button>
+              <button class="undo" onclick="handleTributeAction('undo', '${user.username}')">Undo</button>
               <button class="edit" onclick="editUser(${idx})">Edit</button>
-              <button class="delete" onclick="deleteUser('${user.id || user.row || idx}')">Delete</button>
+              <button class="delete" onclick="deleteUser(${idx})">Delete</button>
               <button class="notify" onclick="notifyUser('${user.email}', '${user.username}')">Notify</button>
-              <button class="notes-btn" onclick="openNotes('${user.id || user.row || idx}', ${idx})">Notes</button>
             </td>
           </tr>
         `;
@@ -241,195 +92,126 @@
       document.getElementById('user-tbody').innerHTML = html;
     }
 
-    function viewApplication(idx) {
-      const user = window._latestUsers[idx];
-      let html = `<strong>Username:</strong> ${user.username || ''}<br>
-        <strong>Email:</strong> ${user.email || ''}<br>
-        <strong>Role:</strong> ${user.role || ''}<br>
-        <strong>Password:</strong> ${user.password ? '••••' : ''}<br>
-        <strong>Tribute Paid:</strong> ${user.tributePaid == "true" ? 'Yes' : 'No'}<br>
-        <strong>Tribute Approval:</strong> ${user.tributeApproved == "true" ? 'Accepted' : (user.tributeApproved == "false" ? 'Declined' : 'Pending')}<br>`;
-      document.getElementById('viewDetails').innerHTML = html;
-      document.getElementById('viewModal').style.display = 'flex';
-    }
-
-    function closeModal(modalId) {
-      document.getElementById(modalId).style.display = 'none';
-    }
-
-    // Admin Notes modal
-    function openNotes(id, idx) {
-      notesUserId = id;
-      let user = window._latestUsers[idx];
-      let notes = user.adminNotes || "";
-      document.getElementById('adminNotes').value = notes;
-      let history = user.historyLog ? JSON.parse(user.historyLog) : [];
-      notesHistory = history;
-      let logHtml = history.length ? history.map(h => `<span>${h}</span>`).join("") : "<em>No status history.</em>";
-      document.getElementById('notesHistory').innerHTML = logHtml;
-      document.getElementById('notesModal').style.display = 'flex';
-    }
-
-    async function saveNotes() {
-      const notes = document.getElementById('adminNotes').value.trim();
-      await fetch(`${SHEETDB_API}/id/${notesUserId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminNotes: notes })
-      });
-      closeModal('notesModal');
-      loadUsers();
-    }
-
-    // Set Tribute Paid
-    async function setTributePaid(id, value) {
-      await fetch(`${SHEETDB_API}/id/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tributePaid: value })
-      });
-      // Log change
-      await addHistory(id, `Tribute Paid set to: ${value === "true" ? "Yes" : "No"} (${new Date().toLocaleString()})`);
-      loadUsers();
-    }
-
-    // Approve/Decline with loading feedback & auto-email
-    async function handleTributeAction(action, userId, btn, idx) {
+    // Tribute action handler
+    function handleTributeAction(action, username) {
       let msg = '';
-      if (action === 'accept') msg = `Approve this user?`;
-      else if (action === 'decline') msg = `Decline this user?`;
-      else if (action === 'undo') msg = `Undo approval/decline for this user?`;
+      if (action === 'accept') msg = `Accept tribute from ${username}?`;
+      else if (action === 'decline') msg = `Decline tribute from ${username}?`;
+      else if (action === 'undo') msg = `Undo tribute decision for ${username}?`;
 
       if (!confirm(msg)) return;
 
-      const row = btn.closest('tr');
-      const statusCell = row.cells[4];
-      statusCell.innerHTML = `<span style="color:#ffd700;font-weight:bold;">Loading...</span>
-        <span class="spinner"><span class="spinner-inner"></span></span>`;
-
-      setTimeout(async () => {
-        let statusText = "";
-        let fieldValue = "";
-        if (action === 'accept') {
-          statusText = "Approved";
-          fieldValue = true;
-          await sendStatusEmail(window._latestUsers[idx], true);
-        } else if (action === 'decline') {
-          statusText = "Declined";
-          fieldValue = false;
-          await sendStatusEmail(window._latestUsers[idx], false);
-        } else if (action === 'undo') {
-          statusText = "Pending";
-          fieldValue = "";
-        }
-        statusCell.innerHTML = `<span style="color:#39ff14;font-weight:bold;">${statusText}</span>`;
-        await updateUserField(userId, 'tributeApproved', fieldValue);
-        // Log change
-        await addHistory(userId, `Approval status set to: ${statusText} (${new Date().toLocaleString()})`);
-        loadUsers();
-      }, 2000);
+      if (action === 'accept') confirmTribute(username, true);
+      else if (action === 'decline') confirmTribute(username, false);
+      else if (action === 'undo') undoTribute(username);
     }
 
-    async function updateUserField(id, field, value) {
-      await fetch(`${SHEETDB_API}/id/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [field]: value })
-      });
+    // Confirm tribute acceptance or decline and sync to SheetDB
+    function confirmTribute(username, accepted) {
+      let tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+      let confirmedTribute = JSON.parse(localStorage.getItem('confirmedTribute') || '{}');
+
+      if (accepted) {
+        tributeStatus[username] = true; // Paid
+        confirmedTribute[username] = true; // Approved
+      } else {
+        tributeStatus[username] = false; // Not paid
+        confirmedTribute[username] = false; // Declined
+      }
+
+      localStorage.setItem('tributeStatus', JSON.stringify(tributeStatus));
+      localStorage.setItem('confirmedTribute', JSON.stringify(confirmedTribute));
+      loadUsers();
+
+      // Sync to SheetDB
+      syncUserToSheetDB(username, tributeStatus[username], confirmedTribute[username]);
+
+      sendStatusEmail(username, accepted);
     }
 
-    async function addHistory(id, logEntry) {
-      let res = await fetch(`${SHEETDB_API}/id/${id}`);
-      let [user] = await res.json();
-      let log = user.historyLog ? JSON.parse(user.historyLog) : [];
-      log.push(logEntry);
-      await fetch(`${SHEETDB_API}/id/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ historyLog: JSON.stringify(log) })
-      });
+    // Undo tribute decision and sync to SheetDB
+    function undoTribute(username) {
+      let tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+      let confirmedTribute = JSON.parse(localStorage.getItem('confirmedTribute') || '{}');
+      tributeStatus[username] = false;
+      delete confirmedTribute[username];
+      localStorage.setItem('tributeStatus', JSON.stringify(tributeStatus));
+      localStorage.setItem('confirmedTribute', JSON.stringify(confirmedTribute));
+      loadUsers();
+      // Sync to SheetDB (set back to No/Pending)
+      syncUserToSheetDB(username, false, "");
     }
 
-    async function deleteUser(id) {
+    // Delete user and related data
+    function deleteUser(idx) {
       if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
-      await fetch(`${SHEETDB_API}/id/${id}`, { method: 'DELETE' });
+
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      const uname = users[idx].username;
+      users.splice(idx, 1);
+      localStorage.setItem('users', JSON.stringify(users));
+
+      let tributeStatus = JSON.parse(localStorage.getItem('tributeStatus') || '{}');
+      let confirmedTribute = JSON.parse(localStorage.getItem('confirmedTribute') || '{}');
+      delete tributeStatus[uname];
+      delete confirmedTribute[uname];
+      localStorage.setItem('tributeStatus', JSON.stringify(tributeStatus));
+      localStorage.setItem('confirmedTribute', JSON.stringify(confirmedTribute));
+
       loadUsers();
+      // Optionally, sync deletion to SheetDB (requires SheetDB delete endpoint)
     }
 
-    // Edit user modal open
-    function editUser(idx) {
-      const user = window._latestUsers[idx];
-      document.getElementById('editIndex').value = user.id || user.row || idx;
-      document.getElementById('editName').value = user.username || '';
-      document.getElementById('editEmail').value = user.email || '';
-      document.getElementById('editRole').value = user.role || '';
-      document.getElementById('editPass').value = "";
-      document.getElementById('editModal').style.display = 'flex';
-    }
-    function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
+    // --- SHEETDB INTEGRATION ---
+    function syncUserToSheetDB(username, tributePaid, tributeApproved) {
+      // Find user email & other info
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.username === username);
+      if (!user) return;
 
-    document.getElementById('editForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      if (!confirm("Save changes to this user?")) return;
-      const id = document.getElementById('editIndex').value;
-      const username = document.getElementById('editName').value.trim();
-      const email = document.getElementById('editEmail').value.trim();
-      const role = document.getElementById('editRole').value;
-      const password = document.getElementById('editPass').value;
-      let updateObj = { username, email, role };
-      if (password) updateObj.password = password;
-      await fetch(`${SHEETDB_API}/id/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateObj)
+      // Prepare API body (adjust column names to match your Google Sheet)
+      const data = {
+        "username": username,
+        "email": user.email || "",
+        "role": user.role || "",
+        "tributePaid": tributePaid ? "Yes" : "No",
+        "tributeApproved": tributeApproved === true ? "Yes" : tributeApproved === false ? "No" : ""
+      };
+
+      // PATCH will update the first row that matches the username
+      fetch('https://sheetdb.io/api/v1/a51mmkqkea3wh/username/' + encodeURIComponent(username), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data })
+      })
+      .then(r => r.json())
+      .then(res => {
+        // Optional: log or notify success
+        // alert('Synced with Google Sheet!');
+      })
+      .catch(() => {
+        alert('Error syncing with Google Sheet. Changes will remain local only.');
       });
-      closeEdit();
-      loadUsers();
-    });
-
-    function openAdd() {
-      document.getElementById('addName').value = '';
-      document.getElementById('addEmail').value = '';
-      document.getElementById('addRole').value = 'slave';
-      document.getElementById('addPass').value = '';
-      document.getElementById('addPaid').value = 'false';
-      document.getElementById('addApproval').value = '';
-      document.getElementById('addModal').style.display = 'flex';
-    }
-    function closeAdd() { document.getElementById('addModal').style.display = 'none'; }
-
-    document.getElementById('addForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      if (!confirm("Confirm and create this user?")) return;
-      const username = document.getElementById('addName').value.trim();
-      const email = document.getElementById('addEmail').value.trim();
-      const role = document.getElementById('addRole').value;
-      const password = document.getElementById('addPass').value;
-      const tributePaid = document.getElementById('addPaid').value;
-      const tributeApproved = document.getElementById('addApproval').value;
-      await fetch(SHEETDB_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ username, email, role, password, tributePaid, tributeApproved }])
-      });
-      closeAdd();
-      loadUsers();
-    });
-
-    // Auto-email user on approve/decline (uses mailto: for now)
-    async function sendStatusEmail(user, approved) {
-      const msg = approved
-        ? `Dear ${user.username},\n\nYour tribute has been accepted by Mistress Obsidian. You may now access the Private Chamber.\n\n- Mistress Obsidian`
-        : `Dear ${user.username},\n\nYour tribute has been declined by Mistress Obsidian. Please contact Mistress for more information.\n\n- Mistress Obsidian`;
-      const subject = 'Tribute Status Update';
-      // Use mailto: (semi-auto), or integrate Google Apps Script for full auto
-      window.open(`mailto:${user.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`);
     }
 
     // Notify user by email (mailto)
     function notifyUser(email, username) {
       const body = encodeURIComponent(`Dear ${username},\n\n[Your message here]\n\n- Mistress Obsidian`);
       window.open(`mailto:${email}?subject=Mistress Obsidian Notification&body=${body}`);
+    }
+
+    // Send tribute status email
+    function sendStatusEmail(username, accepted) {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.username === username);
+      if (!user) return;
+
+      let msg = accepted
+        ? "Your tribute has been accepted by Mistress Obsidian. You may now access the Private Chamber."
+        : "Your tribute has been declined by Mistress Obsidian. Please contact Mistress for more information.";
+
+      const body = encodeURIComponent(`Dear ${username},\n\n${msg}\n\n- Mistress Obsidian`);
+      window.open(`mailto:${user.email}?subject=Tribute Status Update&body=${body}`);
     }
 
     // Logout
