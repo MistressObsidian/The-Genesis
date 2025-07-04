@@ -85,10 +85,10 @@
     }
     tr:nth-child(even) { background: #1e1e1ecc; }
     tr:nth-child(odd) { background: #232323cc; }
-    .status { font-weight: bold; }
-    .accepted { color: #39ff14; }
-    .pending { color: #ffd700; }
-    .declined { color: #ff1a1a; }
+    .status { font-weight: bold; padding: 3px 12px; border-radius: 7px;}
+    .accepted { color: #39ff14; background: #213d21;}
+    .pending { color: #ffd700; background: #362a0b;}
+    .declined { color: #ff1a1a; background: #300606;}
     button, .action-btn {
       padding: 8px 12px;
       border: none;
@@ -167,8 +167,7 @@
           <th>Slave Name</th>
           <th>Email</th>
           <th>Role</th>
-          <th>Tribute Paid</th>
-          <th>Tribute Approval</th>
+          <th>Tribute Status</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -231,33 +230,25 @@
   <script>
     const SHEETDB_URL = 'https://sheetdb.io/api/v1/a51mmkqkea3wh';
 
-    // Only admins can access this panel
     if (localStorage.getItem('role') !== 'admin') {
       window.location.href = 'login.html';
     }
 
-    // Local cache to reduce API calls
     let sheetUsers = [];
 
-    // Helper: Display tribute paid/approval
-    function displayPaidStatus(paid) {
-      if (paid === "Yes" || paid === true) return '<span class="status accepted">Yes</span>';
-      return '<span class="status declined">No</span>';
-    }
-    function displayApprovalStatus(status) {
-      if (status === "Yes" || status === true) return '<span class="status accepted">Accepted</span>';
-      if (status === "No" || status === false) return '<span class="status declined">Declined</span>';
+    // COMBINED STATUS LOGIC
+    function getCombinedTributeStatus(paid, approved) {
+      if ((paid === "Yes" || paid === true) && (approved === "Yes" || approved === true)) return '<span class="status accepted">Accepted</span>';
+      if ((paid === "No" || paid === false) || (approved === "No" || approved === false)) return '<span class="status declined">Declined</span>';
       return '<span class="status pending">Pending</span>';
     }
 
-    // --------- LOAD USERS FROM SHEETDB ----------
     async function loadUsers() {
       const search = document.getElementById('user-search').value.trim().toLowerCase();
       try {
         let res = await fetch(SHEETDB_URL);
         sheetUsers = await res.json();
         if (!Array.isArray(sheetUsers)) sheetUsers = [];
-        // Save to localStorage for possible local usage
         localStorage.setItem('users', JSON.stringify(sheetUsers));
       } catch (e) {
         alert('Failed to load data from Google Sheet. Using local data only.');
@@ -276,8 +267,7 @@
             <td>${user.username || ''}</td>
             <td>${user.email || ''}</td>
             <td>${user.role || ''}</td>
-            <td>${displayPaidStatus(user.tributePaid)}</td>
-            <td>${displayApprovalStatus(user.tributeApproved)}</td>
+            <td>${getCombinedTributeStatus(user.tributePaid, user.tributeApproved)}</td>
             <td>
               <button class="accept" onclick="handleTributeAction('accept', '${user.username}')">Accept</button>
               <button class="decline" onclick="handleTributeAction('decline', '${user.username}')">Decline</button>
@@ -293,7 +283,6 @@
       document.getElementById('user-tbody').innerHTML = html;
     }
 
-    // --------- TRIBUTE ACTIONS ---------
     function handleTributeAction(action, username) {
       if (!username) return;
       let msg = '';
@@ -306,28 +295,24 @@
       else if (action === 'undo') updateUserStatus(username, "No", "Pending");
     }
 
-    // Update tribute paid/approved and PATCH to SheetDB
     async function updateUserStatus(username, paid, approved) {
       let user = sheetUsers.find(u => u.username === username);
       if (!user) return alert('User not found in Sheet!');
-
       user.tributePaid = paid;
       user.tributeApproved = approved === "Pending" ? "" : approved;
-
       try {
         await fetch(`${SHEETDB_URL}/username/${encodeURIComponent(username)}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ data: user })
         });
-        sendStatusEmail(user.email, username, approved);
+        sendStatusEmail(user.email, username, paid, approved);
         loadUsers();
       } catch (e) {
         alert('Failed to sync with Google Sheet.');
       }
     }
 
-    // --------- ADD/EDIT/DELETE ---------
     function openAdd() {
       document.getElementById('addName').value = '';
       document.getElementById('addEmail').value = '';
@@ -345,8 +330,6 @@
       const role = document.getElementById('addRole').value;
       const password = document.getElementById('addPass').value;
       if (!username || !email || !role || !password) return alert('Please fill all fields.');
-
-      // Prevent duplicate username
       if (sheetUsers.some(u => u.username === username)) {
         alert('Username already exists.');
         return;
@@ -391,7 +374,6 @@
       user.email = email;
       user.role = role;
       if (password) user.password = password;
-
       try {
         await fetch(`${SHEETDB_URL}/username/${encodeURIComponent(username)}`, {
           method: "PATCH",
@@ -415,22 +397,32 @@
       }
     }
 
-    // --------- EMAIL NOTIFY ---------
     function notifyUser(email, username) {
       const body = encodeURIComponent(`Dear ${username},\n\n[Your message here]\n\n- Mistress Obsidian`);
       window.open(`mailto:${email}?subject=Mistress Obsidian Notification&body=${body}`);
     }
-    function sendStatusEmail(email, username, approved) {
-      let msg = approved === "Yes"
-        ? "Your tribute has been accepted by Mistress Obsidian. You may now access the Private Chamber."
-        : approved === "No"
-          ? "Your tribute has been declined by Mistress Obsidian. Please contact Mistress for more information."
-          : "Your tribute approval is pending. Please contact Mistress for more information.";
+
+    function sendStatusEmail(email, username, paid, approved) {
+      let combinedStatus;
+      if (paid === "Yes" && approved === "Yes") {
+        combinedStatus = "Accepted";
+      } else if (paid === "No" || approved === "No") {
+        combinedStatus = "Declined";
+      } else {
+        combinedStatus = "Pending";
+      }
+      let msg;
+      if (combinedStatus === "Accepted") {
+        msg = "Your tribute has been accepted by Mistress Obsidian. You may now access the Private Chamber.";
+      } else if (combinedStatus === "Declined") {
+        msg = "Your tribute has been declined by Mistress Obsidian. Please contact Mistress for more information.";
+      } else {
+        msg = "Your tribute status is pending. Please contact Mistress for more information.";
+      }
       const body = encodeURIComponent(`Dear ${username},\n\n${msg}\n\n- Mistress Obsidian`);
       window.open(`mailto:${email}?subject=Tribute Status Update&body=${body}`);
     }
 
-    // --------- LOGOUT ---------
     function logout() {
       localStorage.removeItem('authenticated');
       localStorage.removeItem('username');
@@ -438,9 +430,7 @@
       window.location.href = 'login.html';
     }
 
-    // On page load
     loadUsers();
-    // Reload on modal close (for live update)
     window.closeAdd = closeAdd;
     window.closeEdit = closeEdit;
     window.editUser = editUser;
